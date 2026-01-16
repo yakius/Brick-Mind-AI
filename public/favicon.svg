@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Градиентный фон -->
+    <rect width="512" height="512" rx="128" fill="url(#modern-bg)"/>
+    
+    <!-- LEGO-нейросеть -->
+    <g transform="translate(106 106)">
+        <!-- Основа нейросети из LEGO -->
+        <g stroke="#FFFFFF" stroke-width="3">
+            <!-- Слои нейросети -->
+            <g transform="translate(0 0)">
+                <!-- Входной слой -->
+                <circle cx="50" cy="50" r="20" fill="#E10600"/>
+                <circle cx="50" cy="150" r="20" fill="#0055BF"/>
+                <circle cx="50" cy="250" r="20" fill="#237841"/>
+            </g>
+            
+            <g transform="translate(150 0)">
+                <!-- Скрытый слой -->
+                <circle cx="50" cy="100" r="20" fill="#FFD700"/>
+                <circle cx="50" cy="200" r="20" fill="#FE8A18"/>
+            </g>
+            
+            <g transform="translate(300 0)">
+                <!-- Выходной слой - мозг/кирпичик -->
+                <rect x="30" y="130" width="40" height="40" rx="8" fill="#FFFFFF"/>
+                <!-- LEGO штырьки на "мозге" -->
+                <circle cx="50" cy="140" r="6" fill="#E10600"/>
+                <circle cx="50" cy="160" r="6" fill="#0055BF"/>
+            </g>
+            
+            <!-- Соединения -->
+            <line x1="70" y1="50" x2="170" y2="100" stroke-dasharray="5,5"/>
+            <line x1="70" y1="150" x2="170" y2="100"/>
+            <line x1="70" y1="250" x2="170" y2="200"/>
+            <line x1="70" y1="50" x2="170" y2="200"/>
+            <line x1="220" y1="100" x2="320" y2="150"/>
+            <line x1="220" y1="200" x2="320" y2="150"/>
+        </g>
+        
+        <!-- Текстовый блок AI -->
+        <g transform="translate(340 140)">
+            <text fill="#0D47A1" font-family="Arial" font-size="24" font-weight="bold">AI</text>
+        </g>
+    </g>
+    
+    <!-- Текст логотипа -->
+    <g transform="translate(256 420)">
+        <text text-anchor="middle" fill="#FFFFFF" font-family="'Arial Black', Arial, sans-serif" font-size="32" letter-spacing="2">
+            <tspan x="0" y="0">BRICK</tspan>
+            <tspan x="0" y="36" fill="url(#text-glow)">MIND</tspan>
+            <tspan x="0" y="72" fill="#FFD700">AI</tspan>
+        </text>
+    </g>
+    
+    <defs>
+        <!-- Фон -->
+        <linearGradient id="modern-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#0D47A1"/>
+            <stop offset="100%" stop-color="#0055BF"/>
+        </linearGradient>
+        
+        <!-- Свечение текста -->
+        <linearGradient id="text-glow" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#FFD700"/>
+            <stop offset="50%" stop-color="#FFFFFF"/>
+            <stop offset="100%" stop-color="#FFD700"/>
+        </linearGradient>
+    </defs>
+</svg>
