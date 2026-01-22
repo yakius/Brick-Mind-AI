@@ -1,436 +1,780 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>BrickMind AI - Умный поиск LEGO</title>
-        <link rel="stylesheet" href="/style.css" />
-        <link
-            href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
-            rel="stylesheet"
-        />
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    </head>
-    <body>
-        <header class="header">
-            <div class="container">
-            <nav class="navbar">
-                <a href="#" class="logo">
-                    <div class="logo-icon">🧱</div>
-                    <div class="logo-text">
-                        <h1>BrickMind AI</h1>
-                        <span>Умный поиск LEGO наборов</span>
-                    </div>
-                </a>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BrickMind AI - Умный поиск LEGO наборов</title>
+    
+    <!-- Meta теги -->
+    <meta name="description" content="Искусственный интеллект для поиска LEGO наборов. Находите наборы по описанию, сравнивайте цены и анализируйте рынок.">
+    <meta name="keywords" content="LEGO, AI, поиск, вишлист, сравнение, BrickMind">
+    <meta name="author" content="BrickMind AI">
+    
+    <!-- Иконки -->
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="favicon.ico">
+    
+    <!-- Шрифты -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Стили -->
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.1/dist/umd/supabase.min.js"></script>
+    
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#6366f1">
+    
+    <style>
+        /* Анимация загрузки */
+        .preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0f172a;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+        
+        .preloader.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .brick-loader {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .brick {
+            width: 30px;
+            height: 40px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border-radius: 6px;
+            animation: brickJump 1s ease-in-out infinite;
+        }
+        
+        .brick:nth-child(2) { animation-delay: 0.1s; }
+        .brick:nth-child(3) { animation-delay: 0.2s; }
+        .brick:nth-child(4) { animation-delay: 0.3s; }
+        .brick:nth-child(5) { animation-delay: 0.4s; }
+        
+        @keyframes brickJump {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Прелоадер -->
+    <div class="preloader">
+        <div class="brick-loader">
+            <div class="brick"></div>
+            <div class="brick"></div>
+            <div class="brick"></div>
+            <div class="brick"></div>
+            <div class="brick"></div>
+        </div>
+        <h2 style="color: white; margin-bottom: 10px;">🧱 BrickMind AI</h2>
+        <p style="color: #94a3b8;">Загрузка умного поиска LEGO...</p>
+    </div>
 
-                <div class="nav-links">
-                    <button class="nav-link active" data-tab="search">
-                        <i class="fas fa-search"></i> Поиск
-                    </button>
-                    <button class="nav-link" data-tab="setsComparison">
-                        <i class="fas fa-balance-scale"></i> Сравнение
-                    </button>
-                    <button class="nav-link" data-tab="analytics">
-                        <i class="fas fa-chart-line"></i> Аналитика
-                    </button>
-                    <button class="nav-link" data-tab="tools">
-                        <i class="fas fa-tools"></i> Инструменты
+    <!-- Контейнер для уведомлений -->
+    <div id="toastContainer"></div>
+
+    <!-- Шапка -->
+    <header class="header">
+        <div class="container">
+            <nav class="navbar">
+                <div class="nav-left">
+                    <a href="#" class="logo" onclick="UIManager.switchSection('search'); return false;">
+                        <div class="logo-icon">🧱</div>
+                        <div class="logo-text">
+                            <h1>BrickMind <span class="ai-text">AI</span></h1>
+                            <span class="logo-subtitle">Умный поиск LEGO</span>
+                        </div>
+                    </a>
+                    
+                    <div class="nav-menu">
+                        <a href="#" class="nav-link" data-section="search" onclick="UIManager.switchSection('search'); return false;">
+                            <i class="fas fa-search"></i>
+                            <span>Поиск</span>
+                        </a>
+                        <a href="#" class="nav-link" data-section="compare" onclick="UIManager.switchSection('compare'); return false;">
+                            <i class="fas fa-balance-scale"></i>
+                            <span>Сравнение</span>
+                        </a>
+                        <a href="#" class="nav-link" data-section="tools" onclick="UIManager.switchSection('tools'); return false;">
+                            <i class="fas fa-tools"></i>
+                            <span>Инструменты</span>
+                        </a>
+                        <a href="#" class="nav-link" data-section="profile" onclick="UIManager.switchSection('profile'); return false;">
+                            <i class="fas fa-user"></i>
+                            <span>Профиль</span>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="nav-right">
+                    <div class="nav-actions">
+                        <button class="nav-action" id="themeToggle" title="Сменить тему">
+                            <i class="fas fa-moon"></i>
+                        </button>
+                        
+                        <div class="user-wrapper">
+                            <button class="user-btn" id="userMenuBtn">
+                                <div class="user-avatar-sm" id="userAvatar">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <span id="userNameSm">Войти</span>
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
+                            
+                            <div class="dropdown" id="userDropdown">
+                                <div class="dropdown-header">
+                                    <div class="user-avatar" id="userAvatarLg">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <div class="user-info">
+                                        <strong id="userName">Гость</strong>
+                                        <small id="userEmail">Войдите в аккаунт</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="dropdown-items">
+                                    <a href="#" class="dropdown-item" onclick="UIManager.switchSection('profile'); document.getElementById('userDropdown').classList.remove('active');">
+                                        <i class="fas fa-user-circle"></i>
+                                        <span>Профиль</span>
+                                    </a>
+                                    <a href="#" class="dropdown-item" onclick="UIManager.switchSection('wishlist'); document.getElementById('userDropdown').classList.remove('active');">
+                                        <i class="fas fa-heart"></i>
+                                        <span>Вишлист</span>
+                                        <span class="badge" id="wishlistCount">0</span>
+                                    </a>
+                                    <a href="#" class="dropdown-item" onclick="UIManager.switchSection('history'); document.getElementById('userDropdown').classList.remove('active');">
+                                        <i class="fas fa-history"></i>
+                                        <span>История</span>
+                                        <span class="badge" id="searchCount">0</span>
+                                    </a>
+                                    
+                                    <div class="dropdown-divider"></div>
+                                    
+                                    <a href="#" class="dropdown-item" onclick="AuthManager.showAuthModal(); document.getElementById('userDropdown').classList.remove('active');">
+                                        <i class="fas fa-sign-in-alt"></i>
+                                        <span>Войти</span>
+                                    </a>
+                                    <a href="#" class="dropdown-item logout" id="logoutBtn">
+                                        <i class="fas fa-sign-out-alt"></i>
+                                        <span>Выйти</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Главная секция -->
+    <main class="main-content">
+        <!-- Секция поиска -->
+        <section id="searchSection" class="section active">
+            <div class="hero">
+                <div class="hero-bg">
+                    <div class="gradient-circle"></div>
+                    <div class="gradient-circle"></div>
+                </div>
+                
+                <div class="container">
+                    <div class="hero-content">
+                        <h1 class="hero-title">
+                            Найдите <span class="gradient-text">LEGO набор</span><br>
+                            по описанию
+                        </h1>
+                        <p class="hero-subtitle">
+                            AI-ассистент подберет идеальный набор по вашему описанию.<br>
+                            Сравните цены во всех магазинах и получите лучшую цену.
+                        </p>
+                        
+                        <div class="search-container">
+                            <div class="search-box">
+                                <i class="fas fa-search search-icon"></i>
+                                <input type="text" id="mainSearch" placeholder="Опишите набор который ищете... (например: 'космический корабль с красными деталями')">
+                                <button class="search-action" title="Голосовой поиск" onclick="SearchManager.voiceSearch()">
+                                    <i class="fas fa-microphone"></i>
+                                </button>
+                            </div>
+                            <button class="btn btn-primary" id="searchBtn">
+                                <i class="fas fa-search"></i>
+                                Найти
+                            </button>
+                        </div>
+                        
+                        <div class="quick-tags">
+                            <span class="tag-label">Быстрый поиск:</span>
+                            <div class="tag" data-query="Star Wars">
+                                <i class="fab fa-galactic-republic"></i>
+                                <span>Star Wars</span>
+                            </div>
+                            <div class="tag" data-query="Technic">
+                                <i class="fas fa-cogs"></i>
+                                <span>Technic</span>
+                            </div>
+                            <div class="tag" data-query="Creator Expert">
+                                <i class="fas fa-building"></i>
+                                <span>Creator Expert</span>
+                            </div>
+                            <div class="tag" data-query="City">
+                                <i class="fas fa-city"></i>
+                                <span>City</span>
+                            </div>
+                            <div class="tag" data-query="Harry Potter">
+                                <i class="fas fa-hat-wizard"></i>
+                                <span>Harry Potter</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="hero-stats">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-box"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3 id="totalSets">14,532</h3>
+                                <p>наборов в базе</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3 id="avgSavings">25%</h3>
+                                <p>средняя экономия</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-bolt"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3 id="responseTime">0.12с</h3>
+                                <p>скорость поиска</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3 id="activeUsers">2,847</h3>
+                                <p>активных пользователей</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="container">
+                <div class="section-header">
+                    <div class="section-title">
+                        <h2>Результаты поиска</h2>
+                        <span class="text-muted" id="searchQuery">Введите запрос для поиска</span>
+                    </div>
+                    <div class="section-actions">
+                        <select class="filter-select" id="sortSelect">
+                            <option value="relevance">По релевантности</option>
+                            <option value="price_asc">По цене (возр.)</option>
+                            <option value="price_desc">По цене (убыв.)</option>
+                            <option value="rating">По рейтингу</option>
+                            <option value="pieces">По деталям</option>
+                        </select>
+                        <span class="text-muted" id="resultsCount">0 результатов</span>
+                    </div>
+                </div>
+                
+                <div class="loading" id="loading">
+                    <div class="loader">
+                        <div class="brick"></div>
+                        <div class="brick"></div>
+                        <div class="brick"></div>
+                    </div>
+                    <p>Ищем наборы по вашему запросу...</p>
+                </div>
+                
+                <div id="emptyResults" class="empty-state hidden">
+                    <div class="empty-icon">🔍</div>
+                    <h4>Ничего не найдено</h4>
+                    <p>Попробуйте изменить запрос или использовать другие ключевые слова.</p>
+                    <button class="btn btn-primary" onclick="SearchManager.suggestSearch()">
+                        <i class="fas fa-lightbulb"></i>
+                        Получить подсказку
                     </button>
                 </div>
-
-                <button id="themeToggle" class="theme-toggle">
-                    🌙
-                </button>
-                </button>
-            </nav>
+                
+                <div class="results-grid" id="resultsGrid">
+                    <!-- Результаты будут вставлены сюда -->
+                </div>
             </div>
-        </header>
+        </section>
 
-        <section class="hero">
+        <!-- Секция сравнения -->
+        <section id="compareSection" class="section">
             <div class="container">
-                <h2>Найдите лучшие цены на LEGO</h2>
-                <p>Умный поиск по тысячам наборов с сравнением цен</p>
-
-                <div class="search-hero">
-                    <div class="search-input-group">
-                        <div class="input-with-icon">
-                            <i class="fas fa-search"></i>
-                            <input
-                                type="text"
-                                id="mainSearch"
-                                placeholder="Введите название или номер набора LEGO..."
-                                autocomplete="off"
-                                autofocus
-                            />
-                        </div>
-                        <button id="searchBtn" class="btn-primary">
-                            <i class="fas fa-search"></i> Найти
+                <div class="section-header">
+                    <div class="section-title">
+                        <h2><i class="fas fa-balance-scale"></i> Сравнение наборов</h2>
+                    </div>
+                    <div class="section-actions">
+                        <button class="btn btn-outline" onclick="CompareManager.clearAll()">
+                            <i class="fas fa-trash"></i>
+                            Очистить все
                         </button>
                     </div>
-
-                <div class="quick-searches">
-                    <span class="quick-label">Популярное:</span>
-                    <span class="quick-tag" data-query="star wars">
-                        ⭐ Star Wars
-                    </span>
-                    <span class="quick-tag" data-query="technic">
-                        ⚙️ Technic
-                    </span>
-                    <span class="quick-tag" data-query="city">
-                        🏙️ City
-                    </span>
-                    <span class="quick-tag" data-query="creator expert">
-                        🎨 Creator Expert
-                    </span>
-                    <span class="quick-tag" data-query="marvel">
-                        🦸 Marvel
-                    </span>
-                    <span class="quick-tag" data-query="75367">
-                        #75367
-                    </span>
-                    <span class="quick-tag" data-query="42154">
-                        #42154
-                    </span>
-                    <span class="quick-tag" data-query="10316">
-                        #10316
-                    </span>
                 </div>
-                </div>
-
-                <div class="hero-stats">
-                    <div class="stat-item">
-                        <div class="stat-value" id="totalProducts">14,532</div>
-                        <div class="stat-label">
-                            <i class="fas fa-box-open"></i> наборов в базе
+                
+                <div class="compare-container">
+                    <div class="compare-inputs">
+                        <div class="tool-input">
+                            <input type="text" id="compareInput" placeholder="Введите номер набора (например: 75367)">
+                            <button class="btn btn-primary" id="addCompareBtn">
+                                <i class="fas fa-plus"></i>
+                                Добавить
+                            </button>
                         </div>
+                        <p class="text-muted mt-2">Добавьте 2-4 набора для сравнения цен и характеристик</p>
                     </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="avgSavings">25%</div>
-                        <div class="stat-label">
-                            <i class="fas fa-piggy-bank"></i> средняя экономия
-                        </div>
+                    
+                    <div class="compare-sets" id="compareSets">
+                        <div class="set-card empty"></div>
+                        <div class="set-card empty"></div>
+                        <div class="set-card empty"></div>
+                        <div class="set-card empty"></div>
                     </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="responseTime">0.1с</div>
-                        <div class="stat-label">
-                            <i class="fas fa-bolt"></i> время поиска
-                        </div>
+                    
+                    <div class="text-center mb-4">
+                        <button class="btn btn-gradient" id="compareBtn" disabled>
+                            <i class="fas fa-chart-bar"></i>
+                            Сравнить наборы
+                        </button>
+                    </div>
+                    
+                    <div class="compare-results" id="compareResults">
+                        <!-- Результаты сравнения будут здесь -->
                     </div>
                 </div>
             </div>
         </section>
 
-        <main class="main-content">
+        <!-- Секция инструментов -->
+        <section id="toolsSection" class="section">
             <div class="container">
-                <!-- Поиск -->
-                <section id="searchSection" class="section">
-                    <div class="section-header">
-                        <h3><i class="fas fa-search"></i> Результаты поиска</h3>
-                        <div class="results-controls">
-                            <select id="sortSelect" class="sort-select">
-                                <option value="relevance"><i class="fas fa-sort"></i> По релевантности</option>
-                                <option value="price-asc"><i class="fas fa-sort-amount-down"></i> Цена: по возрастанию</option>
-                                <option value="price-desc"><i class="fas fa-sort-amount-up"></i> Цена: по убыванию</option>
-                                <option value="rating"><i class="fas fa-star"></i> По рейтингу</option>
-                            </select>
-                        </div>
+                <div class="section-header">
+                    <div class="section-title">
+                        <h2><i class="fas fa-tools"></i> Полезные инструменты</h2>
                     </div>
-
-                    <div class="results-container">
-                        <div class="loading-state" id="loading" style="display: none">
-                            <div class="spinner"></div>
-                            <p>Ищем лучшие предложения...</p>
+                </div>
+                
+                <div class="tools-grid">
+                    <div class="tool-card">
+                        <div class="tool-icon gradient-bg">
+                            <i class="fas fa-fingerprint"></i>
                         </div>
-
-                        <div class="results-info" id="resultsInfo" style="display: none">
-                            <div class="info-item">
-                                <span class="info-label"><i class="fas fa-list"></i> Найдено:</span>
-                                <span class="info-value" id="foundCount">0</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label"><i class="fas fa-ruble-sign"></i> Диапазон цен:</span>
-                                <span class="info-value" id="priceRange">-</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label"><i class="fas fa-calculator"></i> Средняя цена:</span>
-                                <span class="info-value" id="avgPrice">-</span>
-                            </div>
-                        </div>
-
-                        <div class="results-grid" id="resultsGrid">
-                            <div class="placeholder">
-                                <i class="fas fa-search fa-3x"></i>
-                                <p>Введите запрос для поиска наборов LEGO</p>
-                                <p class="text-tertiary">
-                                    Например: "star wars", "technic машина", "75367"
-                                </p>
-                            </div>
-                        </div>
-
-                        <div id="noResults" style="display: none">
-                            <i class="fas fa-search-minus fa-3x"></i>
-                            <h4>Ничего не найдено</h4>
-                            <p>
-                                Попробуйте изменить запрос или используйте другие ключевые слова
-                            </p>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Сравнение наборов -->
-                <section id="setsComparisonSection" class="section" style="display: none">
-                    <div class="comparison-container">
-                        <div class="input-with-icon">
-                            <i class="fas fa-hashtag"></i>
-                            <input
-                                type="text"
-                                class="search-input"
-                                id="setSearchInput"
-                                placeholder="Введите номер набора LEGO (например: 75367)"
-                                autocomplete="off"
-                            />
-                        </div>
-
-                        <div class="comparison-header">
-                            <h3><i class="fas fa-balance-scale"></i> Сравнение наборов</h3>
-                            <button class="add-set-button" id="addSetBtn">
-                                <i class="fas fa-plus"></i> Добавить набор
+                        <h4>Идентификация набора</h4>
+                        <p>Узнайте всю информацию о наборе по его номеру</p>
+                        
+                        <div class="tool-input">
+                            <input type="text" id="setNumberInput" placeholder="Номер набора (5 цифр)">
+                            <button class="btn btn-primary" id="identifyBtn">
+                                <i class="fas fa-search"></i>
                             </button>
                         </div>
-
-                        <div class="sets-grid" id="setsGrid">
-                            <!-- Наборы будут добавляться динамически -->
-                            <div class="set-item">
-                                <button class="remove-button"><i class="fas fa-times"></i></button>
-                                <div class="set-number">10316</div>
-                                <div class="set-name">Rivendell</div>
-                            </div>
-
-                            <div class="set-item">
-                                <button class="remove-button"><i class="fas fa-times"></i></button>
-                                <div class="set-number">75367</div>
-                                <div class="set-name">Venator</div>
-                            </div>
-
-                            <div class="set-item">
-                                <button class="remove-button"><i class="fas fa-times"></i></button>
-                                <div class="set-number">76269</div>
-                                <div class="set-name">Avengers Tower</div>
-                            </div>
-                        </div>
-
-                        <div class="buttons-container">
-                            <button class="compare-button" id="compareSetsBtn">
-                                <i class="fas fa-chart-bar"></i> Сравнить характеристики
-                            </button>
-                            <button class="compare-prices-button" id="compareSetsPricesBtn">
-                                <i class="fas fa-money-bill-wave"></i> Сравнить цены
-                            </button>
-                        </div>
-
-                        <div id="comparisonResults" class="comparison-results">
-                            <div class="placeholder">
-                                <i class="fas fa-balance-scale fa-3x"></i>
-                                <p>Добавьте наборы и нажмите "Сравнить"</p>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Аналитика -->
-                <section id="analyticsSection" class="section" style="display: none">
-                    <div class="section-header">
-                        <h3><i class="fas fa-chart-line"></i> Аналитика рынка</h3>
-                        <p class="section-subtitle">
-                            Тренды и статистика по наборам LEGO
-                        </p>
-                    </div>
-
-                    <div class="analytics-grid">
-                        <div class="analytics-card">
-                            <div class="card-header">
-                                <h4><i class="fas fa-fire"></i> Популярные наборы</h4>
-                                <span class="card-badge">Сегодня</span>
-                            </div>
-                            <div class="trending-list" id="trendingList">
-                                <!-- Загрузится динамически -->
-                            </div>
-                        </div>
-
-                        <div class="analytics-card">
-                            <div class="card-header">
-                                <h4><i class="fas fa-chart-pie"></i> Ценовая статистика</h4>
-                                <span class="card-badge">Средние</span>
-                            </div>
-                            <div class="price-stats" id="priceStats">
-                                <!-- Загрузится динамически -->
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Инструменты -->
-                <section id="toolsSection" class="section" style="display: none">
-                    <div class="section-header">
-                        <h3><i class="fas fa-tools"></i> Инструменты</h3>
-                        <p class="section-subtitle">
-                            Полезные инструменты для коллекционеров LEGO
-                        </p>
-                    </div>
-
-                    <div class="tools-grid">
-                        <!-- Идентификатор наборов -->
-                        <div class="tool-card professional">
-                            <div class="tool-icon"><i class="fas fa-search"></i></div>
-                            <div class="tool-content">
-                                <h4>Идентификатор наборов</h4>
-                                <p>Найдите информацию о наборе по номеру</p>
-                                <div class="tool-input-group">
-                                    <input
-                                        type="text"
-                                        id="setNumberInput"
-                                        placeholder="Номер набора (например: 75367)"
-                                    />
-                                    <button class="tool-btn" id="identifySetBtn">
-                                        <i class="fas fa-search"></i> Найти
-                                    </button>
-                                </div>
-                                <div id="setResult" class="tool-result"></div>
-                            </div>
-                        </div>
-
-                        <!-- Калькулятор стоимости -->
-                        <div class="tool-card professional">
-                            <div class="tool-icon"><i class="fas fa-calculator"></i></div>
-                            <div class="tool-content">
-                                <h4>Калькулятор стоимости</h4>
-                                <p>Рассчитайте цену за деталь</p>
-                                <div class="calc-inputs">
-                                    <div class="input-with-icon">
-                                        <i class="fas fa-ruble-sign"></i>
-                                        <input
-                                            type="number"
-                                            id="calcPrice"
-                                            placeholder="Цена (руб)"
-                                            min="1"
-                                        />
-                                    </div>
-                                    <div class="input-with-icon">
-                                        <i class="fas fa-puzzle-piece"></i>
-                                        <input
-                                            type="number"
-                                            id="calcPieces"
-                                            placeholder="Количество деталей"
-                                            min="1"
-                                        />
-                                    </div>
-                                </div>
-                                <button class="tool-btn" id="calculateBtn">
-                                    <i class="fas fa-calculator"></i> Рассчитать
-                                </button>
-                                <div id="calcResult" class="tool-result"></div>
-                            </div>
-                        </div>
-
-                        <!-- Вишлист -->
-                        <div class="tool-card professional">
-                            <div class="tool-icon"><i class="fas fa-heart"></i></div>
-                            <div class="tool-content">
-                                <h4>Вишлист</h4>
-                                <p>Сохраняйте понравившиеся наборы</p>
-                                <div class="tool-input-group">
-                                    <input
-                                        type="text"
-                                        id="wishlistInput"
-                                        placeholder="Название или номер набора"
-                                    />
-                                    <button class="tool-btn" id="addToWishlistBtn">
-                                        <i class="fas fa-plus"></i> Добавить
-                                    </button>
-                                </div>
-                                <div id="wishlistItems" class="tool-result"></div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-            </div>
-        </main>
-
-        <!-- Доступные для поддержки -->
-        <section class="donations-section">
-            <div class="container">
-                <div class="donations-card">
-                    <div class="donations-header">
-                        <h3><i class="fas fa-heart"></i> Поддержать проект</h3>
-                        <p class="donations-subtitle">
-                            BrickMind AI развивается благодаря вашей поддержке
-                        </p>
+                        
+                        <div class="tool-result" id="identifyResult"></div>
                     </div>
                     
-                    <div class="donations-content">
-                        <div class="donation-methods">
-                            <div class="donation-method">
-                                <div class="donation-icon alerts">
-                                    <i class="fas fa-bell"></i>
-                                </div>
-                                <h4>DonationAlerts</h4>
-                                <p>Быстрые донаты через сервис</p>
-                                <a href="https://www.donationalerts.com/r/brickmind_ai" 
-                                   target="_blank" 
-                                   class="donation-btn">
-                                    <i class="fas fa-external-link-alt"></i> Перейти
-                                </a>
+                    <div class="tool-card">
+                        <div class="tool-icon" style="background: linear-gradient(135deg, #10b981, #34d399);">
+                            <i class="fas fa-calculator"></i>
+                        </div>
+                        <h4>Калькулятор цены</h4>
+                        <p>Рассчитайте стоимость одной детали</p>
+                        
+                        <div class="tool-inputs">
+                            <input type="number" id="calcPrice" placeholder="Цена набора (₽)" min="0" step="100">
+                            <input type="number" id="calcPieces" placeholder="Количество деталей" min="1">
+                        </div>
+                        
+                        <button class="btn btn-primary" id="calculateBtn" style="width: 100%;">
+                            <i class="fas fa-calculator"></i>
+                            Рассчитать
+                        </button>
+                        
+                        <div class="tool-result" id="calcResult"></div>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon" style="background: linear-gradient(135deg, #8b5cf6, #a78bfa);">
+                            <i class="fas fa-chart-pie"></i>
+                        </div>
+                        <h4>Аналитика рынка</h4>
+                        <p>Тренды и статистика по наборам LEGO</p>
+                        
+                        <div class="mt-3">
+                            <h5><i class="fas fa-fire"></i> Популярные сейчас</h5>
+                            <div id="trendingList" class="mt-2">
+                                <!-- Будет заполнено скриптом -->
                             </div>
                         </div>
                         
-                        <div class="donation-info">
-                            <p><i class="fas fa-info-circle"></i> Все донаты идут на развитие проекта: серверы, домен, новые функции</p>
+                        <div class="mt-3">
+                            <h5><i class="fas fa-tag"></i> Распределение цен</h5>
+                            <div id="priceStats" class="mt-2">
+                                <!-- Будет заполнено скриптом -->
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <footer class="footer">
+        <!-- Секция профиля -->
+        <section id="profileSection" class="section">
             <div class="container">
-                <div class="footer-content">
-                <div class="footer-section">
-                    <h4>Ресурсы</h4>
-                    <ul class="footer-links">
-                        <li><a href="/privacy">Политика конфиденциальности</a></li>
-                        <li><a href="/terms">Условия использования</a></li>
-                        <li><a href="https://t.me/YakiEXE" target="_blank" rel="noopener noreferrer">Поддержка</a></li>
-                    </ul>
-                </div>
-                </div>
-                    <div class="footer-section">
-                        <h4>Навигация</h4>
-                        <ul class="footer-links">
-                            <li><a href="#" data-tab="search"><i class="fas fa-search"></i> Поиск</a></li>
-                            <li><a href="#" data-tab="setsComparison"><i class="fas fa-balance-scale"></i> Сравнение</a></li>
-                            <li><a href="#" data-tab="analytics"><i class="fas fa-chart-line"></i> Аналитика</a></li>
-                            <li><a href="#" data-tab="tools"><i class="fas fa-tools"></i> Инструменты</a></li>
-                        </ul>
+                <div class="profile-header">
+                    <div class="profile-avatar">
+                        <div class="avatar-large" id="profileAvatar">
+                            <span>Г</span>
+                        </div>
+                        <button class="avatar-edit" onclick="ProfileManager.editAvatar()">
+                            <i class="fas fa-camera"></i>
+                        </button>
                     </div>
-
-                    <div class="footer-section">
-                        <h4>Ресурсы</h4>
-                        <ul class="footer-links">
-                            <li><a href="/privacy"><i class="fas fa-shield-alt"></i> Политика конфиденциальности</a></li>
-                            <li><a href="/terms"><i class="fas fa-file-contract"></i> Условия использования</a></li>
-                            <li><a href="mailto:support@brickmind.ai"><i class="fas fa-envelope"></i> Поддержка</a></li>
-                        </ul>
+                    
+                    <div class="profile-info">
+                        <h3 id="profileName">Гость</h3>
+                        <p class="text-muted" id="profileEmail">Войдите, чтобы увидеть профиль</p>
+                        
+                        <div class="profile-stats">
+                            <div class="profile-stat">
+                                <strong id="profileWishlist">0</strong>
+                                <span>в вишлисте</span>
+                            </div>
+                            <div class="profile-stat">
+                                <strong id="profileSearches">0</strong>
+                                <span>поисков</span>
+                            </div>
+                            <div class="profile-stat">
+                                <strong id="memberSince">0 дн.</strong>
+                                <span>с нами</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
-
-                <div class="footer-bottom">
-                    <p>© 2024 BrickMind AI. Все права защищены.</p>
-                    <span class="disclaimer">LEGO® является товарным знаком корпорации LEGO Group.</span>
+                
+                <div class="profile-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4><i class="fas fa-history"></i> История поиска</h4>
+                            <button class="btn-text" onclick="ProfileManager.clearHistory()">
+                                <i class="fas fa-trash"></i>
+                                Очистить
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="history-list" id="historyList">
+                                <!-- История будет здесь -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h4><i class="fas fa-cog"></i> Настройки</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="settings">
+                                <div class="setting">
+                                    <div class="setting-info">
+                                        <h5>Уведомления о ценах</h5>
+                                        <p>Получать уведомления о скидках</p>
+                                    </div>
+                                    <label class="switch">
+                                        <input type="checkbox" id="priceAlerts" checked>
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                                
+                                <div class="setting">
+                                    <div class="setting-info">
+                                        <h5>Темная тема</h5>
+                                        <p>Использовать темный режим</p>
+                                    </div>
+                                    <label class="switch">
+                                        <input type="checkbox" id="darkMode">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                                
+                                <div class="setting">
+                                    <div class="setting-info">
+                                        <h5>Email уведомления</h5>
+                                        <p>Получать новости и обновления</p>
+                                    </div>
+                                    <label class="switch">
+                                        <input type="checkbox" id="emailNotifications" checked>
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                                
+                                <div class="setting">
+                                    <div class="setting-info">
+                                        <h5>Популярные темы</h5>
+                                        <p>Самые активные категории LEGO</p>
+                                    </div>
+                                </div>
+                                
+                                <div id="themesList" class="mt-2">
+                                    <!-- Список тем будет здесь -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </footer>
+        </section>
+    </main>
 
-        <script src="/script.js"></script>
-    </body>
+    <!-- Модальное окно авторизации -->
+    <div class="modal" id="authModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-user-circle"></i> Вход в аккаунт</h3>
+                <button class="modal-close" onclick="AuthManager.hideAuthModal()">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="auth-tabs">
+                    <button class="auth-tab active" data-tab="login">Вход</button>
+                    <button class="auth-tab" data-tab="register">Регистрация</button>
+                </div>
+                
+                <!-- Форма входа -->
+                <form class="auth-form active" id="loginForm" onsubmit="event.preventDefault(); AuthManager.login();">
+                    <div class="input-group">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="loginEmail" placeholder="Email" required>
+                    </div>
+                    
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="loginPassword" placeholder="Пароль" required>
+                        <button type="button" class="show-password">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">
+                        <i class="fas fa-sign-in-alt"></i>
+                        Войти
+                    </button>
+                    
+                    <div class="auth-divider">
+                        <span>или войти через</span>
+                    </div>
+                    
+                    <div class="social-auth">
+                        <button type="button" class="btn btn-outline" style="width: 100%; margin-bottom: 10px;" id="googleLogin">
+                            <i class="fab fa-google"></i>
+                            Google
+                        </button>
+                        <button type="button" class="btn btn-outline" style="width: 100%;" id="vkLogin">
+                            <i class="fab fa-vk"></i>
+                            ВКонтакте
+                        </button>
+                    </div>
+                    
+                    <div class="text-center mt-3">
+                        <a href="#" class="text-muted" style="font-size: 0.875rem;">Забыли пароль?</a>
+                    </div>
+                </form>
+                
+                <!-- Форма регистрации -->
+                <form class="auth-form" id="registerForm" onsubmit="event.preventDefault(); AuthManager.register();">
+                    <div class="input-group">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="registerUsername" placeholder="Имя пользователя" required>
+                    </div>
+                    
+                    <div class="input-group">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="registerEmail" placeholder="Email" required>
+                    </div>
+                    
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="registerPassword" placeholder="Пароль" minlength="6" required>
+                        <button type="button" class="show-password">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="registerConfirm" placeholder="Подтвердите пароль" minlength="6" required>
+                        <button type="button" class="show-password">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">
+                        <i class="fas fa-user-plus"></i>
+                        Зарегистрироваться
+                    </button>
+                    
+                    <p class="text-muted text-center mt-3" style="font-size: 0.75rem;">
+                        Нажимая "Зарегистрироваться", вы соглашаетесь с
+                        <a href="terms.html" target="_blank">условиями использования</a> и
+                        <a href="privacy.html" target="_blank">политикой конфиденциальности</a>
+                    </p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Подвал -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div class="logo">
+                        <div class="logo-icon">🧱</div>
+                        <div class="logo-text">
+                            <h2>BrickMind <span class="ai-text">AI</span></h2>
+                            <span class="logo-subtitle">Умный поиск LEGO</span>
+                        </div>
+                    </div>
+                    
+                    <p class="footer-description">
+                        Искусственный интеллект для поиска и сравнения LEGO наборов. 
+                        Находите идеальные наборы по лучшим ценам.
+                    </p>
+                    
+                    <div class="footer-social">
+                        <a href="#" class="social-link" title="GitHub">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <a href="#" class="social-link" title="Telegram">
+                            <i class="fab fa-telegram"></i>
+                        </a>
+                        <a href="#" class="social-link" title="VK">
+                            <i class="fab fa-vk"></i>
+                        </a>
+                        <a href="#" class="social-link" title="Twitter">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h4>Навигация</h4>
+                        <ul>
+                            <li><a href="#" data-section="search" onclick="UIManager.switchSection('search');">Поиск</a></li>
+                            <li><a href="#" data-section="compare" onclick="UIManager.switchSection('compare');">Сравнение</a></li>
+                            <li><a href="#" data-section="tools" onclick="UIManager.switchSection('tools');">Инструменты</a></li>
+                            <li><a href="#" data-section="profile" onclick="UIManager.switchSection('profile');">Профиль</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="footer-column">
+                        <h4>Поддержка</h4>
+                        <ul>
+                            <li><a href="#" onclick="AuthManager.showAuthModal()">Вход/Регистрация</a></li>
+                            <li><a href="#" id="donateBtn">Поддержать проект</a></li>
+                            <li><a href="mailto:support@brickmind.ai">Обратная связь</a></li>
+                            <li><a href="#" onclick="showToast('info', 'Обновление', 'Версия 1.0.0')">О приложении</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="footer-column">
+                        <h4>Правовая информация</h4>
+                        <ul>
+                            <li><a href="privacy.html" target="_blank">Политика конфиденциальности</a></li>
+                            <li><a href="terms.html" target="_blank">Условия использования</a></li>
+                            <li><a href="#" onclick="UIManager.showDisclaimer()">Дисклеймер LEGO</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2024 BrickMind AI. Все права защищены.</p>
+                <p class="disclaimer">
+                    LEGO® является товарным знаком LEGO Group. Данный проект не связан и не спонсируется LEGO Group.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Основной скрипт -->
+    <script src="script.js"></script>
+    
+    <script>
+        // Скрываем прелоадер после загрузки страницы
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                document.querySelector('.preloader').classList.add('hidden');
+            }, 1000);
+        });
+    </script>
+
+<script>
+    // Быстрые обработчики для тегов в hero секции
+    document.addEventListener('DOMContentLoaded', function() {
+        // Устанавливаем data-query для тегов быстрого поиска
+        const tags = document.querySelectorAll('.tag');
+        const tagQueries = ['Star Wars', 'Technic', 'Creator Expert', 'City', 'Harry Potter'];
+        
+        tags.forEach((tag, index) => {
+            if (index < tagQueries.length) {
+                tag.setAttribute('data-query', tagQueries[index]);
+            }
+        });
+        
+        // Обработчик для кнопки микрофона
+        const voiceBtn = document.querySelector('.search-action');
+        if (voiceBtn) {
+            voiceBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                SearchManager.voiceSearch();
+            });
+        }
+        
+        // Обработчик для кнопки "Поддержать проект"
+        const donateBtn = document.getElementById('donateBtn');
+        if (donateBtn) {
+            donateBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                Toast.info('Поддержка проекта', 'Эта функция скоро будет доступна!');
+            });
+        }
+    });
+</script>
+
+</body>
 </html>
